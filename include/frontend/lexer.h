@@ -45,13 +45,19 @@ enum TOKEN_TYPE
 class Token
 {
 public:
+    // Matched token string
     std::string raw;
+    // Token tyep
     TOKEN_TYPE token_type;
+    // Token position
     size_t line, column;
     [[nodiscard]] bool is_keyword() const;
     [[nodiscard]] bool is_type() const;
-    void must(TOKEN_TYPE);
-    [[nodiscard]] bool expect(TOKEN_TYPE) const;
+    // Calls exit if token_type is unexpected
+    void must(std::initializer_list<TOKEN_TYPE>);
+    // Check if token_type is unexpected
+    [[nodiscard]] bool expect(std::initializer_list<TOKEN_TYPE>) const;
+    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
 };
 
 class TokenList {
@@ -60,8 +66,8 @@ public:
     size_t pos = 0;
     void push(const Token&);
     Token& read();
-    Token& peek();
     Token& peek(size_t offset);
+    bool empty() const;
 };
 
 TokenList make_token(std::istream&);

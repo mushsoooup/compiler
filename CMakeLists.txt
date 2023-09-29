@@ -15,4 +15,6 @@ add_executable(compiler src/main.cpp
         include/utils/error.h
         include/frontend/parser.h
         include/frontend/ast.h
+        src/frontend/ast/parser.cpp
+        src/frontend/ast/print.cpp
 )

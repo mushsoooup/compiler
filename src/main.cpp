@@ -6,6 +6,7 @@
 
 #define SOURCE_FILE "../resources/ast_demo.cpp"
 #define TOKEN_LOG "../log/token.txt"
+#define AST_LOG "../log/ast.txt"
 
 int main() {
     std::ifstream srcfile(SOURCE_FILE);
@@ -19,4 +20,11 @@ int main() {
         critical_error("Failed to open file " TOKEN_LOG);
     }
     output_token(parser.token_list, token_out);
+    parser.parse();
+    std::ofstream ast_out(AST_LOG);
+    if (!ast_out.is_open()) {
+        critical_error("Failed to open file " TOKEN_LOG);
+    }
+    parser.output_ast(ast_out);
+    return 0;
 }
