@@ -26,5 +26,8 @@ int main() {
         critical_error("Failed to open file " TOKEN_LOG);
     }
     parser.output_ast(ast_out);
+    // TODO: Semantic analysis
+    // Type check
+    // Initialize global variables to zero;
     return 0;
 }

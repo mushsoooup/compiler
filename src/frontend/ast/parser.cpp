@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "frontend/parser.h"
+#include <iostream>
 
 Token &Parser::read() {
     return token_list.read();
@@ -32,12 +33,33 @@ std::unique_ptr<CompUnit> Parser::ParseCompUnit() {
 // VarDecl -> BType VarDef (, VarDef)* ;
 std::unique_ptr<VarDecl> Parser::ParseVarDecl() {
     auto &token = read();
+    bool is_const = false;
+    if (token.expect({TK_KEYWORD_CONST})) {
+        is_const = true;
+        token = read();
+    }
     token.must({TK_KEYWORD_INT, TK_KEYWORD_FLOAT});
-    auto result = std::make_unique<VarDecl>(token);
+    auto result = std::make_unique<VarDecl>(token, is_const);
     result->defs.push_back(ParseVarDef());
+    if (is_const) {
+        auto value = result->defs.back()->exp->evaluate();
+        auto visitor = [&] (auto &arg) {
+            std::cout << result->defs.back()->ident.raw << " : " << arg << std::endl;
+        };
+        std::visit(visitor, value);
+        current_env->add_symbol(result->defs.back()->ident.raw, {Symbol::SYMBOL_INT_CONST, value});
+    }
     while (peek().expect({TK_COMMA})) {
         read();
         result->defs.push_back(ParseVarDef());
+        if (is_const) {
+            auto value = result->defs.back()->exp->evaluate();
+            auto visitor = [&] (auto &arg) {
+                std::cout << result->defs.back()->ident.raw << " : " << arg << std::endl;
+            };
+            std::visit(visitor, value);
+            current_env->add_symbol(result->defs.back()->ident.raw, {Symbol::SYMBOL_INT_CONST, value});
+        }
     }
     read().must({TK_SEMI});
     return result;
@@ -48,10 +70,21 @@ std::unique_ptr<VarDef> Parser::ParseVarDef() {
     auto &token = read();
     token.must({TK_IDENT});
     auto result = std::make_unique<VarDef>(token);
+    // array
+    while (peek().expect({TK_LPAREN})) {
+        read();
+        result->dims.push_back(ParseExp());
+        read();
+    }
     read().must({TK_ASSIGN});
     if (peek().expect({TK_COMMA, TK_SEMI})) {
+        // Uninitialized variable
         result->exp = nullptr;
+    } else if (peek().expect({TK_LBRACK})){
+        // Array
+
     } else {
+        // Initialized variable
         result->exp = ParseExp();
     }
     return result;

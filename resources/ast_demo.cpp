@@ -1,1 +1,3 @@
-int a = (3 + 56) + (-3 + 3) / 2, b = a + 3;
+const int a = 3;
+const int b = a + 3;
+const int c = (((a + b)) / 2 + 3.0 + 6 % b);

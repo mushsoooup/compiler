@@ -6,6 +6,7 @@
 #include <utility>
 #include "frontend/lexer.h"
 #include "frontend/ast.h"
+#include "frontend/env.h"
 
 class Parser {
 public:

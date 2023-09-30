@@ -82,7 +82,9 @@ void UnaryOp::print(std::ostream &out, const std::string &prefix, bool isLeft) c
 
 void VarDef::print(std::ostream &out, const std::string &prefix, bool isLeft) const {
     print_prefix(out, prefix, isLeft);
-    out << std::string("VarDef : ") << ident.raw << std::string("\n");
+    out << std::string("VarDef : ") << ident.raw;
+    // TODO: output dimension info
+    out << std::string("\n");
     exp->print(out,  prefix + (isLeft ? "│   " : "    "), true);
 }
 

@@ -17,4 +17,7 @@ add_executable(compiler src/main.cpp
         include/frontend/ast.h
         src/frontend/ast/parser.cpp
         src/frontend/ast/print.cpp
+        src/frontend/ast/eval.cpp
+        include/frontend/env.h
+        src/frontend/ast/env.cpp
 )
