@@ -23,12 +23,8 @@ public:
 
 class Env {
 public:
-    Env *outer;
+    Env *outer = nullptr;
     std::unordered_map<std::string, Symbol> symbols;
-    std::vector<Env *> children;
     void add_symbol(const std::string&, Symbol);
     Symbol get_symbol(const std::string&);
 };
-
-extern Env *global_env;
-extern Env *current_env;

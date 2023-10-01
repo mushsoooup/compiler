@@ -20,4 +20,6 @@ add_executable(compiler src/main.cpp
         src/frontend/ast/eval.cpp
         include/frontend/env.h
         src/frontend/ast/env.cpp
+        include/frontend/visitor.h
+        src/frontend/visitor.cpp
 )

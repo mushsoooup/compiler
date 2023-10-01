@@ -30,7 +30,7 @@ enum TOKEN_TYPE
     // ! && ||
     TK_OP_NOT, TK_OP_AND, TK_OP_OR,
     // characters
-    TK_BLANK,
+    TK_BLANK, TK_COMMENT, TK_MLCOMMENT, TK_MLCOMMENTEND,
     // =
     TK_ASSIGN,
     // , ;

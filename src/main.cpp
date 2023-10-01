@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 
-#define SOURCE_FILE "../resources/ast_demo.cpp"
+#define SOURCE_FILE "../resources/functional/95_float.sy"
 #define TOKEN_LOG "../log/token.txt"
 #define AST_LOG "../log/ast.txt"
 
@@ -13,6 +13,7 @@ int main() {
     if (!srcfile.is_open()) {
         critical_error("Failed to open file " SOURCE_FILE);
     }
+
     Parser parser(make_token(srcfile));
     std::cout << "Token count : " << parser.token_list.token_list.size() << std::endl;
     std::ofstream token_out(TOKEN_LOG);

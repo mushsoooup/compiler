@@ -207,9 +207,11 @@ std::variant<int, float> Number::evaluate() {
 }
 
 std::variant<int, float> LVal::evaluate() const {
-    return current_env->get_symbol(token.raw).value;
+    critical_error("Not implemented.");
+    return 1;
 }
 
 std::variant<int, float> ParenExp::evaluate() const {
     return exp->evaluate();
 }
+

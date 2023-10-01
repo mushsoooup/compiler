@@ -35,6 +35,9 @@ static void process_token(TokenList &token_list, const std::string& raw, TOKEN_T
 TokenList make_token(std::istream& file) {
     TokenList token_list;
     MatchRule rule_table[] = {
+            RULE("\\/\\/", TK_COMMENT),
+            RULE("\\/\\*", TK_MLCOMMENT),
+            RULE("\\*\\/", TK_MLCOMMENTEND),
             RULE(" +", TK_BLANK),
             RULE("[_a-zA-Z]+[_a-zA-Z0-9]*", TK_IDENT),
             RULE(",", TK_COMMA),
@@ -48,7 +51,7 @@ TokenList make_token(std::istream& file) {
             // // float rule is so complicated
             // // that I have to split it
             // // Rule for decimal fractional-constant exponent-part(opt)
-            RULE("(?:[0-9]?\\.[0-9]+|[0-9]+\\.)(?:[eE][+-]?[0-9]+)?|"
+            RULE("(?:[0-9]*\\.[0-9]+|[0-9]+\\.)(?:[eE][+-]?[0-9]+)?|"
                  // // Rule for decimal digit-sequence exponent-part
                  "[0-9]+[eE][+-]?[0-9]+|"
                  // // Rule for hexadecimal-float
@@ -72,6 +75,7 @@ TokenList make_token(std::istream& file) {
     };
     std::string temp;
     size_t line = 1;
+    bool in_comment = false;
     while(std::getline(file, temp)) {
         // match a line
         size_t pos = 1;
@@ -83,14 +87,35 @@ TokenList make_token(std::istream& file) {
             // match part of a line
             bool valid = false;
             std::string substr = temp.substr(pos - 1, temp.size() - pos + 1);
+            if (in_comment) {
+                std::smatch match_result;
+                if (std::regex_search(substr, match_result, rule_table[2].pattern)) {
+                    pos += 2 + match_result.position();
+                    substr = temp.substr(pos - 1, temp.size() - pos + 1);
+                    in_comment = false;
+                } else {
+                    break;
+                }
+            }
             for(auto & i : rule_table) {
                 std::smatch match_result;
                 if (std::regex_search(substr, match_result, i.pattern)) {
                     // Must match the first char
                     if (match_result.position() != 0) continue;
                     valid = true;
+                    // comment
+                    if (i.token_type == TK_COMMENT) {
+                        pos += substr.size();
+                        break;
+                    } else if (i.token_type == TK_MLCOMMENT) {
+                        in_comment = true;
+                        break;
+                    } else if (i.token_type == TK_MLCOMMENTEND) {
+                        Token error_token = {.line = line, .column = pos};
+                        critical_error(error_token, "Unexpected comment end.");
+                    }
                     // Ignore spaces
-                    if (i.token_type != TK_BLANK)
+                    if (i.token_type != TK_BLANK )
                         // Process Identifier
                         process_token(token_list, match_result.str(), i.token_type, line, pos);
                     pos += match_result.str().size();

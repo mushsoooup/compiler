@@ -36,7 +36,7 @@ void Token::print(std::ostream &out, const std::string &prefix, bool isLeft) con
 }
 
 void TokenList::push(const Token& tk) {
-    this->token_list.push_back(tk);
+    this->token_list.emplace_back(tk);
 }
 
 Token& TokenList::read() {
