@@ -3,211 +3,231 @@
 //
 #pragma once
 #include "frontend/lexer.h"
-#include <variant>
 #include <memory>
 #include <optional>
+#include <string>
+#include <variant>
+#include <vector>
 
-class Number {
+enum TYPE {
+  TYPE_VOID,
+  TYPE_INT,
+  TYPE_FLOAT,
+};
+
+enum OP {
+  OP_ADD,
+  OP_SUB,
+  OP_MUL,
+  OP_DIV,
+  OP_REM,
+  OP_POS,
+  OP_NEG,
+  OP_NOT,
+  OP_LT,
+  OP_GT,
+  OP_LE,
+  OP_GE,
+  OP_EQ,
+  OP_NE,
+  OP_AND,
+  OP_OR,
+};
+
+class MulExpr;
+class AddExpr {
 public:
-    Token &token;
-    explicit Number(Token & _token) : token(_token) {};
-    std::variant<int, float> evaluate();
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<MulExpr *> exprs;
+  std::vector<OP> ops;
+};
+
+class UnaryExpr;
+class MulExpr {
+public:
+  std::vector<UnaryExpr *> exprs;
+  std::vector<OP> ops;
+};
+
+class Callee;
+class UnaryOp;
+class LVal;
+class Number;
+class UnaryExpr {
+public:
+  std::variant<Callee *, UnaryOp *, AddExpr *, LVal *, Number *> expr;
+};
+
+class UnaryOp {
+public:
+  OP op;
+  UnaryExpr *expr = nullptr;
 };
 
 class LVal {
 public:
-    Token &token;
-    explicit LVal(Token &_token) : token(_token) {};
-    [[nodiscard]] std::variant<int, float> evaluate() const;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::string ident;
+  std::vector<AddExpr *> exprs;
 };
 
-class Exp;
-class ParenExp {
+class Number {
 public:
-    std::shared_ptr<Exp> exp;
-    explicit ParenExp(std::shared_ptr<Exp> _exp) : exp(std::move(_exp)) {};
-    [[nodiscard]] std::variant<int, float> evaluate() const;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
-};
-
-class PrimaryExp {
-public:
-    std::variant<std::shared_ptr<Number>, std::shared_ptr<LVal>, std::shared_ptr<ParenExp>> exp;
-    std::variant<int, float> evaluate();
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  TYPE type;
+  std::variant<int, float> val;
 };
 
 class Callee {
 public:
-    Token &token;
-    std::vector<std::shared_ptr<Exp>> params;
-    explicit Callee(Token &_token) : token(_token) {};
-    std::variant<int, float> evaluate();
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::string ident;
+  std::vector<AddExpr *> args;
 };
 
-class UnaryExp;
-class UnaryOp {
+class RelExpr {
 public:
-    Token &op;
-    std::shared_ptr<UnaryExp> exp;
-    explicit UnaryOp(Token &_op) : op(_op) {};
-    [[nodiscard]] std::variant<int, float> evaluate() const;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<AddExpr *> exprs;
+  std::vector<OP> ops;
 };
 
-class UnaryExp {
+class EqExpr {
 public:
-    std::variant<std::shared_ptr<PrimaryExp>, std::shared_ptr<Callee>, std::shared_ptr<UnaryOp>> exp;
-    std::variant<int, float> evaluate();
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<RelExpr *> exprs;
+  std::vector<OP> ops;
 };
 
-class MulExp {
+class LAndExpr {
 public:
-    std::vector<Token *> ops;
-    std::vector<std::shared_ptr<UnaryExp>> exps;
-    std::variant<int, float> evaluate();
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<EqExpr *> exprs;
 };
 
-class AddExp {
+class LOrExpr {
 public:
-    std::vector<Token *> ops;
-    std::vector<std::shared_ptr<MulExp>> exps;
-    std::variant<int, float> evaluate();
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<LAndExpr *> exprs;
 };
 
-class RelExp {
+class Decl;
+class FuncDef;
+class CompUnit {
 public:
-    std::vector<Token *> ops;
-    std::vector<std::shared_ptr<AddExp>> exps;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<std::variant<Decl *, FuncDef *>> defs;
 };
 
-class EqExp {
+class ConstDecl;
+class VarDecl;
+class Decl {
 public:
-    std::vector<Token *> ops;
-    std::vector<std::shared_ptr<RelExp>> exps;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::variant<ConstDecl *, VarDecl *> decl;
 };
 
-class LAndExp {
+class ConstDef;
+class ConstDecl {
 public:
-    std::vector<std::shared_ptr<EqExp>> exps;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  TYPE type;
+  std::vector<ConstDef *> defs;
 };
 
-class LOrExp {
+class InitVal;
+class ConstDef {
 public:
-    std::vector<std::shared_ptr<LAndExp>> exps;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::string ident;
+  std::vector<AddExpr *> exprs;
+  InitVal *val = nullptr;
 };
 
-class Exp {
+class Array;
+class InitVal {
 public:
-    std::shared_ptr<AddExp> exp;
-    explicit Exp(std::shared_ptr<AddExp> _exp) : exp(std::move(_exp)) {};
-    [[nodiscard]] std::variant<int, float> evaluate() const;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::variant<AddExpr *, Array *> val;
 };
 
-class VarDef {
+class Array {
 public:
-    Token &ident;
-    std::shared_ptr<Exp> exp;
-    std::vector<std::shared_ptr<Exp>> dims;
-    explicit VarDef(Token &_ident) : ident(_ident) {};
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<InitVal *> vals;
 };
 
+class VarDef;
 class VarDecl {
 public:
-    Token &btype;
-    bool is_const;
-    std::vector<std::shared_ptr<VarDef>> defs;
-    explicit VarDecl(Token &_btype, bool _is_const) : btype(_btype), is_const(_is_const){};
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  TYPE type;
+  std::vector<VarDef *> defs;
+};
+
+class InitVal;
+class VarDef {
+public:
+  std::string ident;
+  std::vector<AddExpr *> exprs;
+  InitVal *val = nullptr;
+};
+
+class FuncFParam;
+class Block;
+class FuncDef {
+public:
+  TYPE type;
+  std::string ident;
+  std::vector<FuncFParam *> params;
+  Block *block = nullptr;
 };
 
 class FuncFParam {
 public:
-    Token &btype;
-    Token &ident;
-    explicit FuncFParam(Token &_btype, Token &_ident) : btype(_btype), ident(_ident) {};
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  TYPE type;
+  std::string ident;
+  bool array;
+  std::vector<AddExpr *> exprs;
 };
 
-class Cond {
+class BlockItem;
+class Block {
 public:
-    std::shared_ptr<LOrExp> exp;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  std::vector<BlockItem *> items;
+};
+
+class Stmt;
+class BlockItem {
+public:
+  std::variant<Decl *, Stmt *> item;
+};
+
+class AssignStmt;
+class EvalStmt;
+class IfStmt;
+class WhileStmt;
+class BreakStmt;
+class ContinueStmt;
+class ReturnStmt;
+class Stmt {
+public:
+  std::variant<AssignStmt *, EvalStmt *, IfStmt *, Block *, WhileStmt *,
+               BreakStmt *, ContinueStmt *, ReturnStmt *>
+      stmt;
 };
 
 class AssignStmt {
 public:
-    std::shared_ptr<LVal> lval;
-    std::shared_ptr<Exp> exp;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  LVal *lval = nullptr;
+  AddExpr *expr = nullptr;
 };
 
-class Stmt;
+class EvalStmt {
+public:
+  AddExpr *expr = nullptr;
+};
+
 class IfStmt {
 public:
-    std::shared_ptr<Cond> cond;
-    std::shared_ptr<Stmt> body;
-    std::shared_ptr<Stmt> else_body;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  LOrExpr *cond = nullptr;
+  Stmt *tStmt = nullptr, *fStmt = nullptr;
 };
 
 class WhileStmt {
 public:
-    std::shared_ptr<Cond> cond;
-    std::shared_ptr<Stmt> body;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  LOrExpr *cond = nullptr;
+  Stmt *stmt = nullptr;
 };
 
-class CtrlStmt {
-public:
-    // true for break, false for continue;
-    bool type;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
-};
-
+class BreakStmt {};
+class ContinueStmt {};
 class ReturnStmt {
 public:
-    std::shared_ptr<Exp> exp;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
-};
-
-class Block {
-public:
-    std::vector<std::variant<std::shared_ptr<VarDecl>, std::shared_ptr<Stmt>>> items;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
-};
-
-class FuncDef {
-public:
-    Token &functype;
-    Token &ident;
-    std::vector<std::shared_ptr<FuncFParam>> params;
-    std::shared_ptr<Block> block;
-    explicit FuncDef(Token &_functype, Token &_ident) : functype(_functype), ident(_ident) {};
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
-};
-
-class Stmt {
-public:
-    std::variant<std::shared_ptr<AssignStmt>, std::shared_ptr<Exp>, std::shared_ptr<Block>,  std::shared_ptr<IfStmt>,
-            std::shared_ptr<WhileStmt>, std::shared_ptr<CtrlStmt>, std::shared_ptr<ReturnStmt>> stmt;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
-};
-
-class CompUnit {
-public:
-    std::vector<std::variant<std::shared_ptr<VarDecl>, std::shared_ptr<FuncDef>>> decls;
-    void print(std::ostream &out, const std::string &prefix, bool isLeft) const;
+  AddExpr *expr = nullptr;
 };

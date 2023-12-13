@@ -7,19 +7,10 @@ include_directories(include)
 
 add_executable(compiler src/main.cpp
         src/utils/conv.cpp
-        include/utils/conv.h
-        src/frontend/lexer/lexer.cpp
-        include/frontend/lexer.h
-        src/frontend/lexer/token.cpp
         src/utils/error.cpp
-        include/utils/error.h
-        include/frontend/parser.h
-        include/frontend/ast.h
-        src/frontend/ast/parser.cpp
-        src/frontend/ast/print.cpp
-        src/frontend/ast/eval.cpp
-        include/frontend/env.h
-        src/frontend/ast/env.cpp
-        include/frontend/visitor.h
-        src/frontend/visitor.cpp
+        src/frontend/lexer/lexer.cpp
+        src/frontend/lexer/token.cpp
+        src/frontend/parser/parser.cpp
+        src/frontend/parser/print.cpp
+        src/frontend/parser/eval.cpp
 )
