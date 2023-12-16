@@ -32,8 +32,6 @@ private:
   LOrExpr *ParseLOrExpr();
   CompUnit *ParseCompUnit();
   Decl *ParseDecl();
-  ConstDecl *ParseConstDecl();
-  ConstDef *ParseConstDef();
   InitVal *ParseInitVal();
   Array *ParseArray();
   VarDecl *ParseVarDecl();

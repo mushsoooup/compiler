@@ -3,12 +3,17 @@
 #include "utils/error.h"
 #include <fstream>
 #include <iostream>
+#include <string>
 
-#define SOURCE_FILE "../resources/functional/95_float.sy"
+#define SOURCE_FILE "../resources/ast_demo.cpp"
 #define TOKEN_LOG "../log/token.txt"
 #define AST_LOG "../log/ast.txt"
 
-int main() {
+int main(int argc, char **argv) {
+  std::string source = SOURCE_FILE;
+  if (argc == 2) {
+    source = argv[1];
+  }
   std::ifstream srcfile(SOURCE_FILE);
   if (!srcfile.is_open()) {
     critical_error("Failed to open file " SOURCE_FILE);

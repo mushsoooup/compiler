@@ -139,6 +139,7 @@ void TokenList::make_token(std::istream &file) {
 
 void TokenList::output_token(std::ostream &file) {
   for (const auto &each : list) {
-    file << each.raw << " " << each.line << " " << each.column << std::endl;
+    file << each.raw << " " << each.line << " " << each.column << " "
+         << each.token_type << std::endl;
   }
 }

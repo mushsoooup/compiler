@@ -11,7 +11,7 @@ Token &Parser::read() { return token_list.read(); }
 
 Token &Parser::peek(size_t pos) { return token_list.peek(pos); }
 
-void Parser::parse() { comp_unit = nullptr; }
+void Parser::parse() { comp_unit = ParseCompUnit(); }
 
 // AddExpr -> MulExpr { ('+' | '-') MulExpr }
 AddExpr *Parser::ParseAddExpr() {
@@ -126,7 +126,7 @@ Callee *Parser::ParseCallee() {
   auto tk = read();
   tk.must({TK_IDENT});
   res->ident = tk.raw;
-  read().must({TK_LBRACE});
+  read().must({TK_LPAREN});
   while (true) {
     res->args.push_back(ParseAddExpr());
     if (!peek().expect({TK_COMMA})) {
@@ -134,7 +134,7 @@ Callee *Parser::ParseCallee() {
     }
     read();
   }
-  read().must({TK_RBRACE});
+  read().must({TK_RPAREN});
   return res;
 };
 
@@ -200,7 +200,7 @@ LOrExpr *Parser::ParseLOrExpr() {
 CompUnit *Parser::ParseCompUnit() {
   auto res = new CompUnit;
   while (!token_list.empty()) {
-    if (peek(2).expect({TK_LBRACE})) {
+    if (peek(2).expect({TK_LPAREN})) {
       res->defs.push_back(ParseFuncDef());
     } else {
       res->defs.push_back(ParseDecl());
@@ -213,48 +213,12 @@ CompUnit *Parser::ParseCompUnit() {
 Decl *Parser::ParseDecl() {
   auto res = new Decl;
   if (peek().expect({TK_KEYWORD_CONST})) {
-    res->decl = ParseConstDecl();
+    read();
+    res->decl = ParseVarDecl();
+    res->decl->is_const = true;
   } else {
     res->decl = ParseVarDecl();
   }
-  return res;
-};
-
-// ConstDecl -> 'const' Type ConstDef { ',' ConstDef } ';'
-ConstDecl *Parser::ParseConstDecl() {
-  auto res = new ConstDecl;
-  read().must({TK_KEYWORD_CONST});
-  auto tk = read();
-  if (tk.expect({TK_KEYWORD_INT})) {
-    res->type = TYPE_INT;
-  } else {
-    read().must({TK_KEYWORD_FLOAT});
-    res->type = TYPE_FLOAT;
-  }
-  while (true) {
-    res->defs.push_back(ParseConstDef());
-    if (!peek().expect({TK_COMMA})) {
-      break;
-    }
-    read();
-  }
-  read().must({TK_SEMI});
-  return res;
-};
-
-// ConstDef -> IDENT { '[' AddExpr ']' } '=' InitVal
-ConstDef *Parser::ParseConstDef() {
-  auto res = new ConstDef;
-  auto tk = read();
-  tk.must({TK_IDENT});
-  res->ident = tk.raw;
-  while (peek().expect({TK_LBRACE})) {
-    read();
-    res->exprs.push_back(ParseAddExpr());
-    read().must({TK_RBRACE});
-  }
-  read().must({TK_ASSIGN});
-  res->val = ParseInitVal();
   return res;
 };
 
@@ -284,6 +248,7 @@ Array *Parser::ParseArray() {
     }
     read();
   }
+  read().must({TK_RBRACK});
   return res;
 };
 
@@ -341,8 +306,8 @@ FuncDef *Parser::ParseFuncDef() {
   tk = read();
   tk.must({TK_IDENT});
   res->ident = tk.raw;
-  read().must({TK_LBRACE});
-  if (!peek().expect({TK_RBRACE})) {
+  read().must({TK_LPAREN});
+  if (!peek().expect({TK_RPAREN})) {
     while (true) {
       res->params.push_back(ParseFuncFParam());
       if (!peek().expect({TK_COMMA})) {
@@ -468,9 +433,9 @@ EvalStmt *Parser::ParseEvalStmt() {
 IfStmt *Parser::ParseIfStmt() {
   auto res = new IfStmt;
   read().must({TK_KEYWORD_IF});
-  read().must({TK_LBRACE});
+  read().must({TK_LPAREN});
   res->cond = ParseLOrExpr();
-  read().must({TK_RBRACE});
+  read().must({TK_RPAREN});
   res->tStmt = ParseStmt();
   if (!peek().expect({TK_KEYWORD_ELSE})) {
     return res;
@@ -484,9 +449,9 @@ IfStmt *Parser::ParseIfStmt() {
 WhileStmt *Parser::ParseWhileStmt() {
   auto res = new WhileStmt;
   read().must({TK_KEYWORD_WHILE});
-  read().must({TK_LBRACE});
+  read().must({TK_LPAREN});
   res->cond = ParseLOrExpr();
-  read().must({TK_RBRACE});
+  read().must({TK_RPAREN});
   res->stmt = ParseStmt();
   return res;
 };

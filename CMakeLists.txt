@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 project(compiler)
 
 set(CMAKE_CXX_STANDARD 23)
-
+set(CMAKE_CXX_FLAGS  "-g")
 include_directories(include)
 
 add_executable(compiler src/main.cpp
